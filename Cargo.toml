@@ -2,6 +2,8 @@
 name = "watch-unlock-rs"
 version = "0.1.0"
 edition = "2024"
+authors = ["Katelyn 'KatLongLegs' Haworth <katelyn+github@haworth.id.au>"]
+license = "MIT"
 
 [dependencies]
 aes = "0.8.4"
@@ -9,9 +11,18 @@ base64 = "0.22.1"
 bluer = { version = "0.17.4", features = ["bluetoothd"] }
 ecb = { version = "0.1.2", features = ["block-padding", "std"] }
 futures = "0.3.31"
+pam-bindings = "0.1.1"
 thiserror = "2.0.18"
 tokio = "1.49.0"
+
+[lints.clippy]
+pedantic = "deny"
 
 [[bin]]
 name = "get_watch_status"
 path = "src/get_watch_status.rs"
+
+[lib]
+name = "pam_apple_watch"
+path = "src/pam.rs"
+crate-type = ["cdylib"]
