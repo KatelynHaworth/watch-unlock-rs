@@ -14,7 +14,7 @@ async fn main() {
         eprintln!();
 
         eprintln!("Usage:");
-        eprintln!("\t{} [identity_resolution_key]", args.get(0).unwrap());
+        eprintln!("\t{} [identity_resolution_key]", args.first().unwrap());
 
         eprintln!("Parameters:");
         eprintln!(
@@ -25,10 +25,17 @@ async fn main() {
 
     println!("Decoding Identity Resolution Key for Apple Watch");
     let mut raw_irk: [u8; 16] = [0; 16];
-    STANDARD
-        .decode_slice(args.get(1).unwrap(), &mut raw_irk[..])
-        .expect("decode success");
-    raw_irk.reverse();
+    match STANDARD.decode_slice(args.get(1).unwrap(), &mut raw_irk[..]) {
+        Err(err) => {
+            eprintln!("Failed to decode IRK: {err}");
+            exit(1)
+        }
+        Ok(decoded_length) if decoded_length != 16 => {
+            eprintln!("Corrupt IRK, it must be 16 bytes long");
+            exit(1)
+        }
+        Ok(_) => raw_irk.reverse(),
+    }
 
     let mut watch = AppleWatch::new(raw_irk);
 
@@ -46,17 +53,17 @@ async fn main() {
         .await
     {
         Err(err) => {
-            println!("Failed to find Apple Watch: {:?}", err);
+            println!("Failed to find Apple Watch: {err}");
             exit(1)
         }
-        Ok(tries) => println!("Found Apple Watch after {} tries", tries),
-    };
+        Ok(tries) => println!("Found Apple Watch after {tries} tries"),
+    }
 
     match watch.get_watch_status().await {
         Err(err) => {
-            println!("Failed to get Apple Watch status: {:?}", err);
+            println!("Failed to get Apple Watch status: {err}");
             exit(1)
         }
-        Ok(status) => println!("Got Apple Watch status: {:?}", status),
-    };
+        Ok(status) => println!("Got Apple Watch status: {status:?}"),
+    }
 }

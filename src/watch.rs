@@ -59,7 +59,7 @@ impl AppleWatch {
 
                 // Discovery timed out or an RSSI wasn't available for
                 // the watch, retry
-                _ => continue,
+                _ => (),
             }
         }
 
@@ -68,7 +68,7 @@ impl AppleWatch {
 
     /// Consumes device discovery events from the Bluetooth adapter
     /// till a device is discovered that has an address that matches,
-    /// via [AppleWatch::is_matching_watch_address], the Apple Watch
+    /// via [`AppleWatch::is_matching_watch_address`], the Apple Watch
     /// being searched for.
     async fn find_watch_internal(
         &self,
@@ -104,7 +104,7 @@ impl AppleWatch {
                                 None => Ok(None)
                             }
                         }
-                        _ => continue
+                        _ => ()
                     }
                 }
             }
@@ -138,47 +138,46 @@ impl AppleWatch {
     /// Specifies the 16-bit unsigned integer Company Identifier
     /// assigned to Apple for use in Bluetooth protocols.
     ///
-    /// Reference: https://www.bluetooth.com/wp-content/uploads/Files/Specification/HTML/Assigned_Numbers/out/en/Assigned_Numbers.pdf
+    /// Reference: <https://www.bluetooth.com/wp-content/uploads/Files/Specification/HTML/Assigned_Numbers/out/en/Assigned_Numbers.pdf>
     const MANUFACTURER_CODE_APPLE: u16 = 0x004c;
 
     /// Specifies the 8-bit unsigned integer Apple Continuity
     /// message type for Nearby Information messages.
     ///
-    /// Reference: https://github.com/furiousMAC/continuity/blob/master/messages/nearby_info.md
+    /// Reference: <https://github.com/furiousMAC/continuity/blob/master/messages/nearby_info.md>
     const NEARBY_INFO_MESSAGE: u8 = 0x10;
 
     /// Specifies the bit-flag for the Apple Watch Locked status
     /// within the data flags segment of a Nearby Information
     /// message.
     ///
-    /// Reference: https://github.com/furiousMAC/continuity/blob/master/messages/nearby_info.md
+    /// Reference: <https://github.com/furiousMAC/continuity/blob/master/messages/nearby_info.md>
     const NEARBY_INFO_DATA_FLAG_WATCH_LOCKED: u8 = 0x20;
 
     /// Specifies the bit-flag for the Apple Watch Auto Unlock,
     /// for other devices (e.g. Macbook or iPhone), within the
     /// data flags segment of a Nearby Information message.
     ///
-    /// Reference: https://github.com/furiousMAC/continuity/blob/master/messages/nearby_info.md
+    /// Reference: <https://github.com/furiousMAC/continuity/blob/master/messages/nearby_info.md>
     const NEARBY_INFO_DATA_FLAG_AUTO_UNLOCK_ENABLED: u8 = 0x80;
 
-    /// Returns an [AppleWatchStatus] for this [AppleWatch] by extracting
+    /// Returns an [`AppleWatchStatus`] for this [`AppleWatch`] by extracting
     /// the information from the manufacturer data advertised by the Apple Watch
     /// over Bluetooth Low Energy.
     ///
-    /// This function expects, and will panic if not, that [AppleWatch::find_watch]
+    /// This function expects, and will panic if not, that [`AppleWatch::find_watch`]
     /// has been called first to identify the target Bluetooth device from which
     /// to extract the information.
     pub async fn get_watch_status(&self) -> Result<AppleWatchStatus, AppleWatchError> {
         let device = self.device.clone().expect("device already found");
 
-        let rssi = match AppleWatchError::wrap_bluetooth_action("get device RSSI", || device.rssi())
-            .await?
-        {
+        let Some(rssi) =
+            AppleWatchError::wrap_bluetooth_action("get device RSSI", || device.rssi()).await?
+        else {
             // This _should_ be impossible given it is checked for in
             // find_watch_internal, but is better to be safe than sorry.
             // Graceful errors are better than panics.
-            None => return Err(RSSIUnavailable),
-            Some(rssi) => rssi,
+            return Err(RSSIUnavailable);
         };
 
         let apple_data: Vec<u8> =
@@ -259,7 +258,7 @@ pub enum AppleWatchError {
 }
 
 impl AppleWatchError {
-    /// Helper function to wrap a [bluer::Error] into a [AppleWatchError]
+    /// Helper function to wrap a [`bluer::Error`] into a [`AppleWatchError`]
     /// along with the action that was attempted that resulted in
     /// the error.
     async fn wrap_bluetooth_action<R, T>(action: &'static str, f: T) -> Result<R, AppleWatchError>
