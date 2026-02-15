@@ -1,6 +1,8 @@
+#[path = "../watch.rs"]
 mod watch;
 
 use crate::watch::AppleWatch;
+
 use base64::{engine::general_purpose::STANDARD, Engine as _};
 use std::env;
 use std::process::exit;

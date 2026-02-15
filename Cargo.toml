@@ -19,10 +19,10 @@ tokio = "1.49.0"
 pedantic = "deny"
 
 [[bin]]
-name = "get_watch_status"
-path = "src/get_watch_status.rs"
+name = "watch_unlock_cli"
+path = "src/cli/main.rs"
 
 [lib]
 name = "pam_apple_watch"
-path = "src/pam.rs"
+path = "src/pam/lib.rs"
 crate-type = ["cdylib"]

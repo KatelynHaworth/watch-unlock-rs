@@ -1,3 +1,6 @@
+#[path = "../watch.rs"]
+mod watch;
+
 use crate::watch::{AppleWatch, AppleWatchStatus};
 
 use base64::{engine::general_purpose::STANDARD, Engine as _};
@@ -8,8 +11,6 @@ use pam::{pam_hooks, pam_try};
 use std::collections::HashMap;
 use std::ffi::CStr;
 use std::time::Duration;
-
-mod watch;
 
 struct AppleWatchPAM;
 pam_hooks!(AppleWatchPAM);
