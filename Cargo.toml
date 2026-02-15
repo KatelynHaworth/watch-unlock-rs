@@ -4,3 +4,10 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
+aes = "0.8.4"
+base64 = "0.22.1"
+bluer = { version = "0.17.4", features = ["bluetoothd"] }
+ecb = { version = "0.1.2", features = ["block-padding", "std"] }
+futures = "0.3.31"
+thiserror = "2.0.18"
+tokio = "1.49.0"
