@@ -221,6 +221,7 @@ impl AppleWatch {
 }
 
 #[derive(Debug)]
+#[allow(dead_code)]
 pub struct AppleWatchStatus {
     /// Specifies the received signal strength indicator of the
     /// Apple Watch, this value can be used to imply the distance

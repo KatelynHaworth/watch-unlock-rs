@@ -11,3 +11,7 @@ ecb = { version = "0.1.2", features = ["block-padding", "std"] }
 futures = "0.3.31"
 thiserror = "2.0.18"
 tokio = "1.49.0"
+
+[[bin]]
+name = "get_watch_status"
+path = "src/get_watch_status.rs"

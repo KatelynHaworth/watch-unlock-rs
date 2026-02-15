@@ -2,16 +2,31 @@ mod watch;
 
 use crate::watch::AppleWatch;
 use base64::{engine::general_purpose::STANDARD, Engine as _};
+use std::env;
+use std::process::exit;
 use std::time::Duration;
-
-const WATCH_IRK: &'static str = "";
 
 #[tokio::main(flavor = "current_thread")]
 async fn main() {
+    let args: Vec<String> = env::args().collect();
+    if args.len() != 2 {
+        eprintln!("Invalid usage");
+        eprintln!();
+
+        eprintln!("Usage:");
+        eprintln!("\t{} [identity_resolution_key]", args.get(0).unwrap());
+
+        eprintln!("Parameters:");
+        eprintln!(
+            "\tidentity_resolution_key - The base64 IRK required to match the desired Apple Watch"
+        );
+        exit(1);
+    }
+
     println!("Decoding Identity Resolution Key for Apple Watch");
     let mut raw_irk: [u8; 16] = [0; 16];
     STANDARD
-        .decode_slice(WATCH_IRK, &mut raw_irk[..])
+        .decode_slice(args.get(1).unwrap(), &mut raw_irk[..])
         .expect("decode success");
     raw_irk.reverse();
 
@@ -30,12 +45,18 @@ async fn main() {
         .find_watch(&adapter, 3, Duration::from_millis(500))
         .await
     {
-        Err(err) => println!("Failed to find Apple Watch: {:?}", err),
+        Err(err) => {
+            println!("Failed to find Apple Watch: {:?}", err);
+            exit(1)
+        }
         Ok(tries) => println!("Found Apple Watch after {} tries", tries),
     };
 
     match watch.get_watch_status().await {
-        Err(err) => println!("Failed to get Apple Watch status: {:?}", err),
+        Err(err) => {
+            println!("Failed to get Apple Watch status: {:?}", err);
+            exit(1)
+        }
         Ok(status) => println!("Got Apple Watch status: {:?}", status),
     };
 }
