@@ -14,11 +14,15 @@ use tokio::time::timeout;
 type Aes128EcbEnc = ecb::Encryptor<aes::Aes128>;
 
 pub struct AppleWatch {
-    pub identity_resolution_key: [u8; 16],
+    identity_resolution_key: [u8; 16],
     device: Option<Device>,
 }
 
 impl AppleWatch {
+    /// Creates a new [`AppleWatch`] that can be used to search
+    /// for, and obtain the status of, an Apple Watch that has
+    /// a Bluetooth address matching the supplied Identity Resolution
+    /// Key.
     pub fn new(irk: [u8; 16]) -> Self {
         Self {
             identity_resolution_key: irk,
@@ -165,9 +169,9 @@ impl AppleWatch {
     /// the information from the manufacturer data advertised by the Apple Watch
     /// over Bluetooth Low Energy.
     ///
-    /// This function expects, and will panic if not, that [`AppleWatch::find_watch`]
-    /// has been called first to identify the target Bluetooth device from which
-    /// to extract the information.
+    /// ### Panics
+    /// This function expects that [`AppleWatch::find_watch`] has been called first
+    /// to identify the target Bluetooth device from which to extract the information.
     pub async fn get_watch_status(&self) -> Result<AppleWatchStatus, AppleWatchError> {
         let device = self.device.clone().expect("device already found");
 
@@ -217,10 +221,22 @@ impl AppleWatch {
                 != 0,
         })
     }
+
+    /// Returns the [`bluer::Address`] of the Apple Watch
+    /// found by [`AppleWatch::find_watch`].
+    ///
+    /// ## Panics
+    /// A panic will be thrown if [`AppleWatch::find_watch`] has not been called
+    /// successfully before invoking this function.
+    pub fn get_watch_address(&self) -> Address {
+        self.device
+            .as_ref()
+            .expect("device already found")
+            .address()
+    }
 }
 
 #[derive(Debug)]
-#[allow(dead_code)]
 pub struct AppleWatchStatus {
     /// Specifies the received signal strength indicator of the
     /// Apple Watch, this value can be used to imply the distance
