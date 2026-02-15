@@ -9,6 +9,7 @@ license = "MIT"
 aes = "0.8.4"
 base64 = "0.22.1"
 bluer = { version = "0.17.4", features = ["bluetoothd"] }
+clap = "4.5.58"
 ecb = { version = "0.1.2", features = ["block-padding", "std"] }
 futures = "0.3.31"
 pam-bindings = "0.1.1"
