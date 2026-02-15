@@ -1,7 +1,7 @@
-#[path = "../watch.rs"]
-mod watch;
+#[path = "../lib.rs"]
+mod lib;
 
-use crate::watch::AppleWatch;
+use crate::lib::watch::AppleWatch;
 
 use base64::{engine::general_purpose::STANDARD, Engine as _};
 use clap::{Arg, ArgMatches, Command};

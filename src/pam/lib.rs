@@ -1,7 +1,7 @@
-#[path = "../watch.rs"]
-mod watch;
+#[path = "../lib.rs"]
+mod lib;
 
-use crate::watch::{AppleWatch, AppleWatchStatus};
+use crate::lib::watch::{AppleWatch, AppleWatchStatus};
 
 use base64::{engine::general_purpose::STANDARD, Engine as _};
 use pam::constants::{PamFlag, PamResultCode, PAM_TEXT_INFO};

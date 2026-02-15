@@ -1,4 +1,4 @@
-use crate::watch::AppleWatchError::{
+use crate::lib::watch::AppleWatchError::{
     AppleContinuityMessageError, BluetoothError, ManufacturerDataUnavailable, RSSIUnavailable,
     RetriesExceeded,
 };
