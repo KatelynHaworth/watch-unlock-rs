@@ -98,6 +98,17 @@ A ***huge*** shout to [DavidSt49/watch-unlock-linux][5] for being a massive insp
 great
 reference for implementation details on detecting and interrogating Apple Watches.
 
+## TODO Before `v1.0.0`
+
+Before a release will be marked as `v1.0.0` the following needs to be completed
+
+- [ ] Make the unlock threshold configurable in PAM policy
+- [ ] Replace usages of `println!` and `eprintln` in the PAM module with syslog
+- [ ] Scrutinise rust dependencies to remove waste (LTO is already enabled, but anything to shorten build times)
+- [ ] Upstream PAM module side conversation implementation to the `pam` crate
+- [ ] (Nice to have) Update the PAM client (in the `pam` crate) to allow passing a username when the client is created
+- [ ] Possibly more
+
 ## License
 
 MIT License

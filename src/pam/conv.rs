@@ -1,4 +1,4 @@
-// TODO: Upstream this to pam-rs
+// TODO: Upstream this to pam
 
 use pam::{
     get_item, PamError, PamHandle, PamItemType, PamMessage, PamMessageStyle, PamResponse,
