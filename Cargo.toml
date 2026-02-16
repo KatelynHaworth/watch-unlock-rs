@@ -16,6 +16,7 @@ pam = { version = "0.8.0", features = ["default", "module"] }
 thiserror = "2.0.18"
 tokio = "1.49.0"
 libc = "0.2.182"
+async-trait = "0.1.89"
 
 [lints.clippy]
 pedantic = "deny"
