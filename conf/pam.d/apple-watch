@@ -1,0 +1,3 @@
+#%PAM-1.0
+
+auth sufficient pam_apple_watch.so
