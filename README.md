@@ -1,5 +1,7 @@
 # ⌚ Apple Watch Unlock
 
+> **NOTE**: This repository is in a pre-release stage. See TODO list bellow for `v1.0.0` requirements
+
 This repository hosts a PAM module, and CLI tool for configuring it, that allows
 for the unlocking of a Linux system using the presence of an Apple Watch.
 
