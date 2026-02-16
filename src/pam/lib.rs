@@ -1,28 +1,27 @@
+mod conv;
 #[path = "../lib.rs"]
 mod lib;
 
 use crate::lib::watch::{AppleWatch, AppleWatchStatus};
 
+use crate::conv::ClientConv;
 use base64::{engine::general_purpose::STANDARD, Engine as _};
-use pam::constants::{PamFlag, PamResultCode, PAM_TEXT_INFO};
-use pam::conv::Conv;
-use pam::module::{PamHandle, PamHooks};
-use pam::{pam_hooks, pam_try};
+use pam::{export_pam_module, PamHandle, PamModule, PamReturnCode};
 use std::collections::HashMap;
-use std::ffi::CStr;
+use std::ffi::{c_uint, CStr};
 use std::time::Duration;
 
 struct AppleWatchPAM;
-pam_hooks!(AppleWatchPAM);
+export_pam_module!(AppleWatchPAM);
 
-impl PamHooks for AppleWatchPAM {
-    fn sm_authenticate(pamh: &mut PamHandle, args: Vec<&CStr>, _: PamFlag) -> PamResultCode {
-        let async_runtime = pam_try!(
-            tokio::runtime::Builder::new_current_thread()
-                .enable_all()
-                .build(),
-            PamResultCode::PAM_SERVICE_ERR
-        );
+impl PamModule for AppleWatchPAM {
+    fn authenticate(handle: &PamHandle, args: Vec<&CStr>, _: c_uint) -> PamReturnCode {
+        let Ok(async_runtime) = tokio::runtime::Builder::new_current_thread()
+            .enable_all()
+            .build()
+        else {
+            return PamReturnCode::Service_Err;
+        };
 
         let args: Vec<_> = args.iter().map(|s| s.to_string_lossy()).collect();
 
@@ -34,20 +33,17 @@ impl PamHooks for AppleWatchPAM {
             })
             .collect();
 
-        let conv = match pamh.get_item::<Conv>() {
-            Ok(Some(conv)) => conv,
-            Ok(None) => {
-                unreachable!("No conv available");
-            }
+        let conv = match ClientConv::try_from(handle) {
+            Ok(conv) => conv,
             Err(err) => {
-                eprintln!("Couldn't get pam_conv");
-                return err;
+                eprintln!("Unable to get pam_conv");
+                return err.0;
             }
         };
 
         let Some(encoded_irk) = args.get("irk") else {
             eprintln!("IRK is not configured");
-            return PamResultCode::PAM_NO_MODULE_DATA;
+            return PamReturnCode::No_Module_Data;
         };
 
         println!("Decoding Identity Resolution Key for Apple Watch");
@@ -55,11 +51,11 @@ impl PamHooks for AppleWatchPAM {
         match STANDARD.decode_slice(encoded_irk, &mut raw_irk[..]) {
             Err(err) => {
                 eprintln!("Failed to decode IRK: {err}");
-                return PamResultCode::PAM_AUTHINFO_UNAVAIL;
+                return PamReturnCode::Authinfo_Unavail;
             }
             Ok(decoded_length) if decoded_length != 16 => {
                 eprintln!("Corrupt IRK, it must be 16 bytes long");
-                return PamResultCode::PAM_BAD_ITEM;
+                return PamReturnCode::Bad_Item;
             }
             Ok(_) => raw_irk.reverse(),
         }
@@ -72,14 +68,16 @@ impl PamHooks for AppleWatchPAM {
 impl AppleWatchPAM {
     const UNLOCK_THRESHOLD: i16 = -80;
 
-    async fn unlock_with_apple_watch(conv: &Conv<'_>, irk: [u8; 16]) -> PamResultCode {
-        let session = pam_try!(bluer::Session::new().await, PamResultCode::PAM_SERVICE_ERR);
-        let adapter = pam_try!(
-            session.default_adapter().await,
-            PamResultCode::PAM_SERVICE_ERR
-        );
+    async fn unlock_with_apple_watch(conv: &ClientConv<'_>, irk: [u8; 16]) -> PamReturnCode {
+        let Ok(session) = bluer::Session::new().await else {
+            return PamReturnCode::Service_Err;
+        };
 
-        let _ = conv.send(PAM_TEXT_INFO, "Searching for Apple Watch");
+        let Ok(adapter) = session.default_adapter().await else {
+            return PamReturnCode::Service_Err;
+        };
+
+        conv.info(c"Searching for Apple Watch");
         let mut watch = AppleWatch::new(irk);
 
         match watch
@@ -88,8 +86,8 @@ impl AppleWatchPAM {
         {
             Err(err) => {
                 eprintln!("Failed to find Apple Watch: {err}");
-                let _ = conv.send(PAM_TEXT_INFO, "Apple Watch not available");
-                return PamResultCode::PAM_IGNORE;
+                conv.error(c"Apple Watch not available");
+                return PamReturnCode::Ignore;
             }
             Ok(tries) => println!("Found Apple Watch after {tries} tries"),
         }
@@ -97,8 +95,8 @@ impl AppleWatchPAM {
         match watch.get_watch_status().await {
             Err(err) => {
                 eprintln!("Failed to get Apple Watch status: {err}");
-                let _ = conv.send(PAM_TEXT_INFO, "Apple Watch not available");
-                PamResultCode::PAM_IGNORE
+                conv.error(c"Apple Watch not available");
+                PamReturnCode::Ignore
             }
             Ok(status) => match status {
                 AppleWatchStatus { rssi, .. } if rssi < Self::UNLOCK_THRESHOLD => {
@@ -107,26 +105,23 @@ impl AppleWatchPAM {
                         rssi,
                         Self::UNLOCK_THRESHOLD
                     );
-                    let _ = conv.send(PAM_TEXT_INFO, "Apple Watch is too far away");
-                    PamResultCode::PAM_IGNORE
+                    conv.error(c"Apple Watch is too far away");
+                    PamReturnCode::Ignore
                 }
                 AppleWatchStatus { locked, .. } if locked => {
-                    let _ = conv.send(PAM_TEXT_INFO, "Apple Watch is locked");
-                    PamResultCode::PAM_IGNORE
+                    conv.error(c"Apple Watch is locked");
+                    PamReturnCode::Ignore
                 }
                 AppleWatchStatus {
                     device_auto_unlock_enabled,
                     ..
                 } if !device_auto_unlock_enabled => {
-                    let _ = conv.send(
-                        PAM_TEXT_INFO,
-                        "Apple Watch is not configured to auto-unlock devices",
-                    );
-                    PamResultCode::PAM_IGNORE
+                    conv.error(c"Apple Watch is not configured to auto-unlock devices");
+                    PamReturnCode::Ignore
                 }
                 _ => {
-                    let _ = conv.send(PAM_TEXT_INFO, "Unlocking with Apple Watch");
-                    PamResultCode::PAM_SUCCESS
+                    conv.info(c"Unlocking with Apple Watch");
+                    PamReturnCode::Success
                 }
             },
         }
