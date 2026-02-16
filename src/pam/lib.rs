@@ -5,9 +5,9 @@ mod lib;
 use crate::lib::watch::{AppleWatch, AppleWatchStatus};
 
 use crate::conv::ClientConv;
+use crate::lib::conf::Config;
 use base64::{engine::general_purpose::STANDARD, Engine as _};
-use pam::{export_pam_module, PamHandle, PamModule, PamReturnCode};
-use std::collections::HashMap;
+use pam::{export_pam_module, get_user, PamHandle, PamModule, PamReturnCode};
 use std::ffi::{c_uint, CStr};
 use std::time::Duration;
 
@@ -15,7 +15,7 @@ struct AppleWatchPAM;
 export_pam_module!(AppleWatchPAM);
 
 impl PamModule for AppleWatchPAM {
-    fn authenticate(handle: &PamHandle, args: Vec<&CStr>, _: c_uint) -> PamReturnCode {
+    fn authenticate(handle: &PamHandle, _: Vec<&CStr>, _: c_uint) -> PamReturnCode {
         let Ok(async_runtime) = tokio::runtime::Builder::new_current_thread()
             .enable_all()
             .build()
@@ -23,15 +23,26 @@ impl PamModule for AppleWatchPAM {
             return PamReturnCode::Service_Err;
         };
 
-        let args: Vec<_> = args.iter().map(|s| s.to_string_lossy()).collect();
+        let config = match Config::load() {
+            Ok(config) => config,
+            Err(err) => {
+                eprintln!("Failed to get module config: {err}");
+                return PamReturnCode::No_Module_Data;
+            }
+        };
 
-        let args: HashMap<&str, &str> = args
-            .iter()
-            .map(|s| {
-                let mut parts = s.splitn(2, '=');
-                (parts.next().unwrap(), parts.next().unwrap_or(""))
-            })
-            .collect();
+        let user = match get_user(handle, None) {
+            Ok(user) => user,
+            Err(err) => {
+                eprintln!("Failed to get current user: {err}");
+                return err.0;
+            }
+        };
+
+        let Some(user) = config.get_user(&user.to_string()) else {
+            eprintln!("No config entry for '{user}'");
+            return PamReturnCode::Ignore;
+        };
 
         let conv = match ClientConv::try_from(handle) {
             Ok(conv) => conv,
@@ -41,14 +52,9 @@ impl PamModule for AppleWatchPAM {
             }
         };
 
-        let Some(encoded_irk) = args.get("irk") else {
-            eprintln!("IRK is not configured");
-            return PamReturnCode::No_Module_Data;
-        };
-
         println!("Decoding Identity Resolution Key for Apple Watch");
         let mut raw_irk: [u8; 16] = [0; 16];
-        match STANDARD.decode_slice(encoded_irk, &mut raw_irk[..]) {
+        match STANDARD.decode_slice(&user.encoded_irk, &mut raw_irk[..]) {
             Err(err) => {
                 eprintln!("Failed to decode IRK: {err}");
                 return PamReturnCode::Authinfo_Unavail;

@@ -1,3 +1,8 @@
 #%PAM-1.0
 
-auth sufficient pam_apple_watch.so
+auth    sufficient  pam_apple_watch.so
+
+# Optionally permit account management if no other modules
+# have been configured, this is required to make the `pam_test`
+# pass when using this PAM config directly.
+account optional    pam_permit.so

@@ -26,6 +26,10 @@ impl Config {
         Ok(Self { entries, lines })
     }
 
+    pub fn get_user(&self, user: &String) -> Option<&Entry> {
+        self.entries.iter().find(|entry| entry.user == *user)
+    }
+
     pub fn update_user(&mut self, user: &String, encoded_irk: &String) -> bool {
         if let Some(entry) = self.entries.iter_mut().find(|entry| entry.user == *user) {
             entry.encoded_irk.clone_from(encoded_irk);
