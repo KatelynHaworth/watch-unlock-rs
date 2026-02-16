@@ -1,5 +1,7 @@
+mod pam_test;
 mod query_status;
 
+use crate::cmds::pam_test::PAMTestCommand;
 use crate::cmds::query_status::QueryStatusCommand;
 
 use async_trait::async_trait;
@@ -14,6 +16,6 @@ pub trait CommandDelegate {
     async fn execute(&self, args: &ArgMatches) -> i32;
 }
 
-pub fn commands() -> [impl CommandDelegate; 1] {
-    [QueryStatusCommand]
+pub fn commands() -> [Box<dyn CommandDelegate>; 2] {
+    [Box::new(QueryStatusCommand), Box::new(PAMTestCommand)]
 }

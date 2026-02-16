@@ -1,9 +1,6 @@
 mod cmds;
 #[path = "../lib.rs"]
 mod lib;
-mod misc_conv;
-
-use crate::cmds::CommandDelegate;
 
 use clap::Command;
 use std::env;
@@ -12,7 +9,10 @@ use std::process::exit;
 #[tokio::main(flavor = "current_thread")]
 async fn main() {
     let cmd_defs = cmds::commands();
-    let commands: Vec<Command> = cmd_defs.iter().map(CommandDelegate::definition).collect();
+    let commands: Vec<Command> = cmd_defs
+        .iter()
+        .map(|delegate| delegate.definition())
+        .collect();
 
     let mut cmd = Command::new(env!("CARGO_CRATE_NAME")).subcommands(commands);
     let matches = cmd.get_matches_mut();
