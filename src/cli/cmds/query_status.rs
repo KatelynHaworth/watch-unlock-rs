@@ -89,7 +89,7 @@ impl CommandDelegate for QueryStatusCommand {
             watch.get_watch_address()
         );
         println!("\tRSSI..........................: {}", status.rssi);
-        println!("\tUnlocked......................: {}", status.locked);
+        println!("\tLocked........................: {}", status.locked);
         println!(
             "\tAuto-unlock devices enabled...: {}",
             status.device_auto_unlock_enabled

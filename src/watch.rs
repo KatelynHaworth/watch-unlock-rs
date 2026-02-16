@@ -209,10 +209,11 @@ impl AppleWatch {
             ));
         }
 
-        let data_flags = apple_data.get(3).ok_or(AppleContinuityMessageError(
-            "Nearby Info message data flags unavailable",
+        let message = apple_data.get(2..5).ok_or(AppleContinuityMessageError(
+            "Nearby Info message data unavailable",
         ))?;
 
+        let data_flags = message[1];
         Ok(AppleWatchStatus {
             rssi,
             locked: (data_flags & Self::NEARBY_INFO_DATA_FLAG_WATCH_LOCKED) != 0x0,
