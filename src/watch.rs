@@ -229,6 +229,7 @@ impl AppleWatch {
     /// ## Panics
     /// A panic will be thrown if [`AppleWatch::find_watch`] has not been called
     /// successfully before invoking this function.
+    #[cfg(feature = "cli")]
     pub fn get_watch_address(&self) -> Address {
         self.device
             .as_ref()

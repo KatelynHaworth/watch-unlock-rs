@@ -1,4 +1,4 @@
-use crate::lib::conf::ConfigError::{ConfigStateCorrupt, InvalidEntryCount};
+use crate::lib::conf::ConfigError::InvalidEntryCount;
 use std::fmt::Display;
 
 use thiserror::Error;
@@ -6,6 +6,8 @@ use thiserror::Error;
 #[derive(Debug)]
 pub struct Config {
     pub entries: Vec<Entry>,
+
+    #[cfg(feature = "cli")]
     lines: Vec<String>,
 }
 
@@ -23,13 +25,20 @@ impl Config {
             .map(TryFrom::try_from)
             .collect::<Result<Vec<Entry>, ConfigError>>()?;
 
-        Ok(Self { entries, lines })
+        Ok(Self {
+            entries,
+
+            #[cfg(feature = "cli")]
+            lines,
+        })
     }
 
+    #[cfg(feature = "lib")]
     pub fn get_user(&self, user: &String) -> Option<&Entry> {
         self.entries.iter().find(|entry| entry.user == *user)
     }
 
+    #[cfg(feature = "cli")]
     pub fn update_user(&mut self, user: &String, encoded_irk: &String) -> bool {
         if let Some(entry) = self.entries.iter_mut().find(|entry| entry.user == *user) {
             entry.encoded_irk.clone_from(encoded_irk);
@@ -47,7 +56,10 @@ impl Config {
         false
     }
 
+    #[cfg(feature = "cli")]
     pub fn save(&mut self) -> Result<(), ConfigError> {
+        use crate::lib::conf::ConfigError::ConfigStateCorrupt;
+
         for (i, entry) in self.entries.iter().enumerate() {
             let Some(line) = self.lines.get_mut(entry.line_number) else {
                 return Err(ConfigStateCorrupt(i, entry.line_number));
@@ -65,6 +77,8 @@ impl Config {
 pub struct Entry {
     pub user: String,
     pub encoded_irk: String,
+
+    #[cfg(feature = "cli")]
     line_number: usize,
 }
 
@@ -82,6 +96,8 @@ impl TryFrom<(usize, &'_ String)> for Entry {
         Ok(Self {
             user: values.first().expect("values length checked").to_string(),
             encoded_irk: values.get(1).expect("values length checked").to_string(),
+
+            #[cfg(feature = "cli")]
             line_number,
         })
     }
@@ -101,6 +117,7 @@ pub enum ConfigError {
     #[error("Config entry (line {0}) has the wrong number ({1}) of entries")]
     InvalidEntryCount(usize, usize),
 
+    #[cfg(feature = "cli")]
     #[error("Config entry {0} was expected to be on line {1} but it didn't exist")]
     ConfigStateCorrupt(usize, usize),
 }

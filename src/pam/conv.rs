@@ -27,6 +27,8 @@ impl ClientConv<'_> {
             let ptr: *const libc::c_void = get_item(handle, PamItemType::Conv)?;
             let typed_ptr = ptr.cast::<Inner>();
             let data: &Inner = &*typed_ptr;
+
+            #[allow(clippy::borrow_deref_ref)]
             Ok(Self(&*data))
         }
     }

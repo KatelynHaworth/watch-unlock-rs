@@ -21,11 +21,21 @@ async-trait = "0.1.89"
 [lints.clippy]
 pedantic = "deny"
 
+[features]
+cli = []
+lib = []
+
 [[bin]]
 name = "watch_unlock_cli"
 path = "src/cli/main.rs"
+required-features = ["cli"]
 
 [lib]
 name = "pam_apple_watch"
 path = "src/pam/lib.rs"
 crate-type = ["cdylib"]
+required-features = ["lib"]
+
+[profile.release]
+opt-level = 3
+lto = true
