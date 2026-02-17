@@ -1,6 +1,6 @@
 # Maintainer: Katelyn 'KatLongLegs' Haworth <katelyn+github@haworth.id.au>
 pkgname=watch-unlock-rs
-pkgver=0.1.0
+pkgver={{VERSION}}
 pkgrel=1
 pkgdesc="A PAM module, and CLI, that provides auth using an Apple Watch"
 arch=("x86_64")
@@ -14,8 +14,8 @@ source=(
     $pkgname-$pkgver.tar.gz.sig::${url}/releases/download/v$pkgver/v$pkgver.tar.gz.sig
 )
 sha256sums=(
-    "e15364f492395019dd6ffdf8c2de35177f84b87c3c121e0e1e12b5027bba22c0" # tarball
-    "982b1a291ed43068263f034c7649e12863f3b490b4cbd1327962eca368410ad6" # signature
+    "{{TAR_SHASUM}}" # tarball
+    "{{TAR_SIG_SHASUM}}" # signature
 )
 validpgpkeys=(
     843A4317E6A6933E196CFEF7940D6D15EAB71277 # Katelyn 'KatLongLegs' Haworth
