@@ -109,6 +109,7 @@ Before a release will be marked as `v1.0.0` the following needs to be completed
 - [ ] Scrutinise rust dependencies to remove waste (LTO is already enabled, but anything to shorten build times)
 - [ ] Upstream PAM module side conversation implementation to the `pam` crate
 - [ ] (Nice to have) Update the PAM client (in the `pam` crate) to allow passing a username when the client is created
+- [ ] (Nice to have) Send notification to watch about the unlock like what happens with a real MacBook
 - [ ] Automatically create packages for Debian and RedHat based distributions using GitHub Actions
 - [ ] Possibly more
 
