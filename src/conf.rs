@@ -33,7 +33,7 @@ impl Config {
         })
     }
 
-    #[cfg(feature = "lib")]
+    #[cfg_attr(feature = "cli", allow(unused))]
     pub fn get_user(&self, user: &String) -> Option<&Entry> {
         self.entries.iter().find(|entry| entry.user == *user)
     }

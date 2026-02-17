@@ -36,7 +36,7 @@ build() {
     cargo build --frozen --release --bin watch_unlock_cli --features="cli"
 
     echo "Building PAM module..."
-    cargo build --frozen --release --lib --features="lib"
+    cargo build --frozen --release --lib
     mv target/release/libpam_apple_watch.so target/release/pam_apple_watch.so
 }
 

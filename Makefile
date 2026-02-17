@@ -6,7 +6,7 @@ lint-cli:
 
 lint-pam:
 	@echo "Linting PAM"
-	@cargo clippy --lib --features="lib"
+	@cargo clippy --lib
 
 lint: lint-cli lint-pam
 
@@ -20,11 +20,11 @@ build-cli-dev:
 
 build-pam-release:
 	@echo "Building PAM [release]"
-	@cargo build --release --lib --features="lib"
+	@cargo build --release --lib
 
 build-pam-dev:
 	@echo "Building PAM [release]"
-	@cargo build --lib --features="lib"
+	@cargo build --lib
 
 build: build-cli-release build-pam-release
 build-dev: build-cli-dev build-pam-dev

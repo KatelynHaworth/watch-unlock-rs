@@ -23,7 +23,6 @@ pedantic = "deny"
 
 [features]
 cli = []
-lib = []
 
 [[bin]]
 name = "watch_unlock_cli"
@@ -34,7 +33,6 @@ required-features = ["cli"]
 name = "pam_apple_watch"
 path = "src/pam/lib.rs"
 crate-type = ["cdylib"]
-required-features = ["lib"]
 
 [profile.release]
 opt-level = 3
