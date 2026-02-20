@@ -105,12 +105,13 @@ reference for implementation details on detecting and interrogating Apple Watche
 Before a release will be marked as `v1.0.0` the following needs to be completed
 
 - [x] Make the unlock threshold configurable in PAM policy
-- [ ] Replace usages of `println!` and `eprintln` in the PAM module with syslog (#1)
-- [ ] Scrutinise rust dependencies to remove waste (LTO is already enabled, but anything to shorten build times) (#2)
-- [ ] Upstream PAM module side conversation implementation to the `pam` crate (#3)
+- [ ] Replace usages of `println!` and `eprintln` in the PAM module with syslog ([#1][6])
+- [ ] Scrutinise rust dependencies to remove waste (LTO is already enabled, but anything to shorten build
+  times) ([#2][7])
+- [ ] Upstream PAM module side conversation implementation to the `pam` crate ([#3][8])
 - [ ] (Nice to have) Update the PAM client (in the `pam` crate) to allow passing a username when the client is created
-- [ ] (Nice to have) Send notification to watch about the unlock like what happens with a real MacBook (#4)
-- [ ] Automatically create packages for Debian and RedHat based distributions using GitHub Actions (#5)
+- [ ] (Nice to have) Send notification to watch about the unlock like what happens with a real MacBook ([#4][9])
+- [ ] Automatically create packages for Debian and RedHat based distributions using GitHub Actions ([#5][10])
 - [ ] Possibly more
 
 ## License
@@ -148,3 +149,13 @@ SOFTWARE.
 [4]: https://espresense.com/devices/apple
 
 [5]: https://github.com/DavidSt49/watch-unlock-linux
+
+[6]: https://github.com/KatelynHaworth/watch-unlock-rs/issues/1
+
+[7]: https://github.com/KatelynHaworth/watch-unlock-rs/issues/2
+
+[8]: https://github.com/KatelynHaworth/watch-unlock-rs/issues/3
+
+[9]: https://github.com/KatelynHaworth/watch-unlock-rs/issues/4
+
+[10]: https://github.com/KatelynHaworth/watch-unlock-rs/issues/5
