@@ -1,7 +1,7 @@
 # Maintainer: Katelyn 'KatLongLegs' Haworth <katelyn+github@haworth.id.au>
-pkgname=watch-unlock-rs
-pkgver={{VERSION}}
-pkgrel=1
+pkgname={{PKG_NAME}}
+pkgver={{PKG_VER}}
+pkgrel={{PKG_REL}}
 pkgdesc="A PAM module, and CLI, that provides auth using an Apple Watch"
 arch=("x86_64")
 url="https://github.com/KatelynHaworth/${pkgname}"
@@ -10,39 +10,38 @@ depends=("bluez" "glibc" "pam")
 makedepends=("cargo")
 options=("!strip")
 source=(
-    $pkgname-$pkgver.tar.gz::${url}/archive/v$pkgver.tar.gz
-    $pkgname-$pkgver.tar.gz.sig::${url}/releases/download/v$pkgver/v$pkgver.tar.gz.sig
+  {{PKG_SOURCE}}
 )
 sha256sums=(
-    "{{TAR_SHASUM}}" # tarball
-    "{{TAR_SIG_SHASUM}}" # signature
+  {{PKG_SOURCE_HASH}}
+  {{PKG_SOURCE_SIG_HASH}}
 )
 validpgpkeys=(
     843A4317E6A6933E196CFEF7940D6D15EAB71277 # Katelyn 'KatLongLegs' Haworth
 )
 
 prepare() {
-	export RUSTUP_TOOLCHAIN=stable
+  export RUSTUP_TOOLCHAIN=stable
 
-	echo "Fetching dependencies..."
-    cargo fetch --locked --target host-tuple
+  echo "Fetching dependencies..."
+  cargo fetch --locked --target host-tuple
 }
 
 build() {
-	export RUSTUP_TOOLCHAIN=stable
-    export CARGO_TARGET_DIR=target
+  export RUSTUP_TOOLCHAIN=stable
+  export CARGO_TARGET_DIR=target
 
-    echo "Building CLI tool..."
-    cargo build --frozen --release --bin watch_unlock_cli --features="cli"
+  echo "Building CLI tool..."
+  cargo build --frozen --release --bin watch_unlock_cli --features="cli"
 
-    echo "Building PAM module..."
-    cargo build --frozen --release --lib
-    mv target/release/libpam_apple_watch.so target/release/pam_apple_watch.so
+  echo "Building PAM module..."
+  cargo build --frozen --release --lib
+  mv target/release/libpam_apple_watch.so target/release/pam_apple_watch.so
 }
 
 package() {
-	install -Dm0755 -t "${pkgdir}/usr/bin/" "target/release/watch_unlock_cli"
-	install -Dm0755 -t "${pkgdir}/usr/lib/security/" "target/release/pam_apple_watch.so"
-	install -Dm0644 -t "${pkgdir}/etc/security/" "${startdir}/conf/security/apple_watch.conf"
-	install -Dm0644 -t "${pkgdir}/etc/pam.d/" "${startdir}/conf/pam.d/apple-watch"
+  install -Dm0755 -t "${pkgdir}/usr/bin/" "target/release/watch_unlock_cli"
+  install -Dm0755 -t "${pkgdir}/usr/lib/security/" "target/release/pam_apple_watch.so"
+  install -Dm0644 -t "${pkgdir}/etc/security/" "${pkgname}-${pkgver}/conf/security/apple_watch.conf"
+  install -Dm0644 -t "${pkgdir}/etc/pam.d/" "${pkgname}-${pkgver}/conf/pam.d/apple-watch"
 }
