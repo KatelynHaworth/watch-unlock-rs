@@ -104,7 +104,7 @@ reference for implementation details on detecting and interrogating Apple Watche
 
 Before a release will be marked as `v1.0.0` the following needs to be completed
 
-- [ ] Make the unlock threshold configurable in PAM policy
+- [x] Make the unlock threshold configurable in PAM policy
 - [ ] Replace usages of `println!` and `eprintln` in the PAM module with syslog
 - [ ] Scrutinise rust dependencies to remove waste (LTO is already enabled, but anything to shorten build times)
 - [ ] Upstream PAM module side conversation implementation to the `pam` crate

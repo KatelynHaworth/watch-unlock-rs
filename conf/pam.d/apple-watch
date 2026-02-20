@@ -1,5 +1,8 @@
 #%PAM-1.0
 
+# Available module arguments:
+#   * unlock_threshold (16-bit signed integer) - Controls the maximum distance, as received signal strength indicator, a
+#                                                watch maybe whilst still allowing for unlocking this device (default -80).
 auth    sufficient  pam_apple_watch.so
 
 # Optionally permit account management if no other modules

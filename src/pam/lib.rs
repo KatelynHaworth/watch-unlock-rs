@@ -8,6 +8,7 @@ use crate::conv::ClientConv;
 use crate::lib::conf::Config;
 use base64::{engine::general_purpose::STANDARD, Engine as _};
 use pam::{export_pam_module, get_user, PamHandle, PamModule, PamReturnCode};
+use std::collections::HashMap;
 use std::ffi::{c_uint, CStr};
 use std::time::Duration;
 
@@ -15,13 +16,23 @@ struct AppleWatchPAM;
 export_pam_module!(AppleWatchPAM);
 
 impl PamModule for AppleWatchPAM {
-    fn authenticate(handle: &PamHandle, _: Vec<&CStr>, _: c_uint) -> PamReturnCode {
+    fn authenticate(handle: &PamHandle, args: Vec<&CStr>, _: c_uint) -> PamReturnCode {
         let Ok(async_runtime) = tokio::runtime::Builder::new_current_thread()
             .enable_all()
             .build()
         else {
             return PamReturnCode::Service_Err;
         };
+
+        let args: Vec<_> = args.iter().map(|s| s.to_string_lossy()).collect();
+
+        let args: HashMap<&str, &str> = args
+            .iter()
+            .map(|s| {
+                let mut parts = s.splitn(2, '=');
+                (parts.next().unwrap(), parts.next().unwrap_or(""))
+            })
+            .collect();
 
         let config = match Config::load() {
             Ok(config) => config,
@@ -67,14 +78,18 @@ impl PamModule for AppleWatchPAM {
         }
 
         async_runtime
-            .block_on(async { AppleWatchPAM::unlock_with_apple_watch(&conv, raw_irk).await })
+            .block_on(async { AppleWatchPAM::unlock_with_apple_watch(args, &conv, raw_irk).await })
     }
 }
 
 impl AppleWatchPAM {
-    const UNLOCK_THRESHOLD: i16 = -80;
+    const DEFAULT_UNLOCK_THRESHOLD: i16 = -80;
 
-    async fn unlock_with_apple_watch(conv: &ClientConv<'_>, irk: [u8; 16]) -> PamReturnCode {
+    async fn unlock_with_apple_watch(
+        args: HashMap<&str, &str>,
+        conv: &ClientConv<'_>,
+        irk: [u8; 16],
+    ) -> PamReturnCode {
         let Ok(session) = bluer::Session::new().await else {
             return PamReturnCode::Service_Err;
         };
@@ -82,6 +97,11 @@ impl AppleWatchPAM {
         let Ok(adapter) = session.default_adapter().await else {
             return PamReturnCode::Service_Err;
         };
+
+        let unlock_threshold: i16 = args
+            .get("unlock_threshold")
+            .and_then(|value| value.parse().ok())
+            .unwrap_or(Self::DEFAULT_UNLOCK_THRESHOLD);
 
         conv.info(c"Searching for Apple Watch");
         let mut watch = AppleWatch::new(irk);
@@ -105,12 +125,8 @@ impl AppleWatchPAM {
                 PamReturnCode::Ignore
             }
             Ok(status) => match status {
-                AppleWatchStatus { rssi, .. } if rssi < Self::UNLOCK_THRESHOLD => {
-                    eprintln!(
-                        "Apple Watch RSSI: {}, Target Threshold: {}",
-                        rssi,
-                        Self::UNLOCK_THRESHOLD
-                    );
+                AppleWatchStatus { rssi, .. } if rssi < unlock_threshold => {
+                    eprintln!("Apple Watch RSSI: {rssi}, Target Threshold: {unlock_threshold}");
                     conv.error(c"Apple Watch is too far away");
                     PamReturnCode::Ignore
                 }
